@@ -32,6 +32,24 @@ for change in classify_changes(before, after):
     print(change)
 ```
 
+## Contract gate
+
+SDK CI runs one shared check against a published `openapi.json` and the SDK's
+actual-surface JSON:
+
+```sh
+python -m meshapi_contract.gate --spec openapi.json --actual surface.json \
+    --spec-version "$(cat .meshapi-spec-version)"
+```
+
+| Exit | Meaning |
+| --- | --- |
+| 0 | SDK covers every spec field and parameter |
+| 1 | Drift: missing members are listed |
+| 2 | Usage error (argparse) |
+| 3 | Surface file built against a different spec or surface schema version |
+| 4 | Operational error: unreadable or malformed input, empty spec surface, or no `schema_version` in the surface file |
+
 ## Development
 
 ```sh
