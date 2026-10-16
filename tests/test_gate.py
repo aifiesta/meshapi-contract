@@ -98,6 +98,46 @@ def test_missing_schema_version_exits_4(tmp_path, capsys):
     assert "schema_version" in capsys.readouterr().out
 
 
+def _baseline(tmp_path, obj):
+    path = tmp_path / "baseline.json"
+    path.write_text(obj if isinstance(obj, str) else json.dumps(obj))
+    return ["--baseline", str(path)]
+
+
+def test_baseline_suppresses_known_missing(tmp_path, capsys):
+    args = _write(tmp_path, SPEC, _actual([["Req", "model"]]))
+    base = _baseline(tmp_path, {"allow": ["missing field: Req.prompt"]})
+    assert main([*args, *base, "--spec-version", "2026-01-01"]) == 0
+    assert "(3 members; 1 baselined)" in capsys.readouterr().out
+
+
+def test_baseline_still_fails_on_new_missing_row(tmp_path, capsys):
+    args = _write(tmp_path, SPEC, _actual([]))
+    base = _baseline(tmp_path, {"allow": ["missing field: Req.prompt"]})
+    assert main([*args, *base, "--spec-version", "2026-01-01"]) == 1
+    out = capsys.readouterr().out
+    assert "1 new member(s) beyond baseline" in out
+    assert "missing field: Req.model" in out
+    assert "missing field: Req.prompt" not in out
+
+
+def test_baseline_stale_entry_noted_but_exit_0(tmp_path, capsys):
+    args = _write(tmp_path, SPEC, _actual([["Req", "model"], ["Req", "prompt"]]))
+    base = _baseline(tmp_path, {"allow": ["missing field: Req.prompt"]})
+    assert main([*args, *base, "--spec-version", "2026-01-01"]) == 0
+    err = capsys.readouterr().err
+    assert "stale baseline" in err
+    assert "missing field: Req.prompt" in err
+
+
+def test_malformed_baseline_exits_4(tmp_path, capsys):
+    args = _write(tmp_path, SPEC, _actual([["Req", "model"], ["Req", "prompt"]]))
+    for bad in ("{nope", [], {"allow": "x"}, {}):
+        base = _baseline(tmp_path, bad)
+        assert main([*args, *base, "--spec-version", "2026-01-01"]) == 4
+        assert "contract-check: error:" in capsys.readouterr().out
+
+
 def test_module_entrypoint(tmp_path):
     args = _write(tmp_path, SPEC, _actual([["Req", "model"], ["Req", "prompt"]]))
     r = subprocess.run(

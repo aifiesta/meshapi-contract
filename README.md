@@ -42,6 +42,12 @@ python -m meshapi_contract.gate --spec openapi.json --actual surface.json \
     --spec-version "$(cat .meshapi-spec-version)"
 ```
 
+Optionally pass `--baseline baseline.json` (`{"allow": ["missing field: Model.field", ...]}`,
+rows exactly as the gate prints them) to tolerate known gaps: only rows outside the
+allowlist fail, and entries that are no longer missing are listed on stderr as stale so
+the baseline can be shrunk. Stale entries never change the exit code; a malformed
+baseline exits 4.
+
 | Exit | Meaning |
 | --- | --- |
 | 0 | SDK covers every spec field and parameter |

@@ -3,6 +3,15 @@
 All notable changes to `meshapi-contract` are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning is semantic.
 
+## [0.2.1] — 2026-10-16
+
+### Added
+- `--baseline PATH` allowlist for the gate (`{"allow": [<row>, ...]}`): listed missing
+  rows are suppressed, new ones still fail, stale entries are reported on stderr.
+
+### Fixed
+- Package version metadata (`pyproject.toml`) now matches the release.
+
 ## [0.2.0] — 2026-10-16
 
 ### Added
