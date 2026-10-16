@@ -23,12 +23,38 @@ Pure Python, standard library only, no runtime dependencies.
 import json
 from meshapi_contract import classify_changes, public_subset, render
 
-before = json.load(open("baseline.json"))
-after = public_subset(json.load(open("generated.json")))
+with open("baseline.json") as f:
+    before = json.load(f)
+with open("generated.json") as f:
+    after = public_subset(json.load(f))
 
 for change in classify_changes(before, after):
     print(change)
 ```
+
+## Contract gate
+
+SDK CI runs one shared check against a published `openapi.json` and the SDK's
+actual-surface JSON:
+
+```sh
+python -m meshapi_contract.gate --spec openapi.json --actual surface.json \
+    --spec-version "$(cat .meshapi-spec-version)"
+```
+
+Optionally pass `--baseline baseline.json` (`{"allow": ["missing field: Model.field", ...]}`,
+rows exactly as the gate prints them) to tolerate known gaps: only rows outside the
+allowlist fail, and entries that are no longer missing are listed on stderr as stale so
+the baseline can be shrunk. Stale entries never change the exit code; a malformed
+baseline exits 4.
+
+| Exit | Meaning |
+| --- | --- |
+| 0 | SDK covers every spec field and parameter |
+| 1 | Drift: missing members are listed |
+| 2 | Usage error (argparse) |
+| 3 | Surface file built against a different spec or surface schema version |
+| 4 | Operational error: unreadable or malformed input, empty spec surface, or no `schema_version` in the surface file |
 
 ## Development
 
