@@ -3,6 +3,14 @@
 All notable changes to `meshapi-contract` are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning is semantic.
 
+## [0.3.0] — 2026-10-16
+
+### Added
+- `ChangeSet` and `build_changeset`: groups `classify_changes` output into endpoint
+  buckets, schema buckets, and parameter buckets (`params_added`, `params_removed`,
+  `params_changed`), plus the deprecated operations and schemas in the target spec and
+  a `has_breaking` flag.
+
 ## [0.2.1] — 2026-10-16
 
 ### Added

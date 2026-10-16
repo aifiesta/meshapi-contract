@@ -1,3 +1,4 @@
+from meshapi_contract.changeset import ChangeSet, build_changeset
 from meshapi_contract.diff import (
     Change,
     classify_changes,
@@ -18,6 +19,8 @@ from meshapi_contract.surface import (
 
 __all__ = [
     "ACTUAL_SCHEMA_VERSION",
+    "ChangeSet",
+    "build_changeset",
     "Surface",
     "SurfaceVersionError",
     "actual_surface_from_json",
