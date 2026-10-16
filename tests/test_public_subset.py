@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from meshapi_contract import public_subset
+from meshapi_contract import public_subset, published_a_new_version, render
+from meshapi_contract.diff import _strip_prose
 
 VERSIONS = [{"label": "2026-08"}]
 
@@ -83,3 +84,52 @@ def test_a_schema_reached_only_through_an_internal_operation_is_pruned():
     )
 
     assert set(public_subset(spec)["components"]["schemas"]) == {"Model"}
+
+
+def test_prose_named_fields_survive_but_their_own_prose_does_not():
+    schema = {
+        "type": "object",
+        "properties": {
+            name: {"type": "string", "description": "prose", "example": "sample"}
+            for name in ("tags", "title", "description", "example")
+        },
+    }
+
+    stripped = _strip_prose(schema)
+
+    assert set(stripped["properties"]) == {"tags", "title", "description", "example"}
+    for field in stripped["properties"].values():
+        assert field == {"type": "string"}
+
+
+def test_render_is_canonical_sorted_indented_and_newline_terminated():
+    spec = {"b": 1, "a": {"y": [1], "x": 2}}
+
+    assert render(spec) == (
+        '{\n  "a": {\n    "x": 2,\n    "y": [\n      1\n    ]\n  },\n  "b": 1\n}\n'
+    )
+
+
+def test_render_is_idempotent_through_a_round_trip():
+    import json
+
+    spec = {"paths": {"/v1/models": {"get": {"responses": {"200": {}}}}}, "n": [3, 1]}
+    once = render(spec)
+
+    assert render(json.loads(once)) == once
+
+
+def _versions_spec(*labels) -> dict:
+    return {"x-mesh-api-versions": [{"label": label} for label in labels]}
+
+
+def test_a_newly_served_dated_version_is_the_escape_hatch():
+    assert published_a_new_version(_versions_spec("2026-08"), _versions_spec("2026-08", "2026-10"))
+
+
+def test_the_same_versions_on_both_sides_are_not_a_new_version():
+    assert not published_a_new_version(_versions_spec("2026-08"), _versions_spec("2026-08"))
+
+
+def test_a_spec_without_the_version_list_on_either_side_is_not_a_new_version():
+    assert not published_a_new_version({}, {})

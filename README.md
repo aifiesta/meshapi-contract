@@ -23,8 +23,10 @@ Pure Python, standard library only, no runtime dependencies.
 import json
 from meshapi_contract import classify_changes, public_subset, render
 
-before = json.load(open("baseline.json"))
-after = public_subset(json.load(open("generated.json")))
+with open("baseline.json") as f:
+    before = json.load(f)
+with open("generated.json") as f:
+    after = public_subset(json.load(f))
 
 for change in classify_changes(before, after):
     print(change)
